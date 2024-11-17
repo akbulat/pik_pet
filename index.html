@@ -1,0 +1,1981 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/Buffers_Metro_StationsZoneofourinterest_1.js"></script>
+        <script src="data/Land_Use_2.js"></script>
+        <script src="data/Infrastructure_3.js"></script>
+        <script src="data/Buildings_4.js"></script>
+        <script src="data/Public_Transport_5.js"></script>
+        <script src="data/Future_metro_stations_6.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        map.createPane('pane_Positronnolabels_0');
+        map.getPane('pane_Positronnolabels_0').style.zIndex = 400;
+        var layer_Positronnolabels_0 = L.tileLayer('https://a.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            pane: 'pane_Positronnolabels_0',
+            opacity: 1.0,
+            attribution: '<a href="https://cartodb.com/basemaps/">Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_Positronnolabels_0;
+        map.addLayer(layer_Positronnolabels_0);
+        function pop_Buffers_Metro_StationsZoneofourinterest_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Name"colspan="2"><strong>Name</strong><br />' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_residen"colspan="2"><strong>Land_Use_residentia</strong><br />' + (feature.properties['lu_residen'] !== null ? autolinker.link(feature.properties['lu_residen'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_grass"colspan="2"><strong>Land_Use_grass</strong><br />' + (feature.properties['lu_grass'] !== null ? autolinker.link(feature.properties['lu_grass'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_recreat"colspan="2"><strong>Land_Use_recreation</strong><br />' + (feature.properties['lu_recreat'] !== null ? autolinker.link(feature.properties['lu_recreat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_park"colspan="2"><strong>Land_Use_park</strong><br />' + (feature.properties['lu_park'] !== null ? autolinker.link(feature.properties['lu_park'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_forest"colspan="2"><strong>Land_Use_forest</strong><br />' + (feature.properties['lu_forest'] !== null ? autolinker.link(feature.properties['lu_forest'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_retail"colspan="2"><strong>Land_Use_retail</strong><br />' + (feature.properties['lu_retail'] !== null ? autolinker.link(feature.properties['lu_retail'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_industr"colspan="2"><strong>Land_Use_industrial</strong><br />' + (feature.properties['lu_industr'] !== null ? autolinker.link(feature.properties['lu_industr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_farmlan"colspan="2"><strong>Land_Use_farmland</strong><br />' + (feature.properties['lu_farmlan'] !== null ? autolinker.link(feature.properties['lu_farmlan'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_commerc"colspan="2"><strong>Land_Use_commercial</strong><br />' + (feature.properties['lu_commerc'] !== null ? autolinker.link(feature.properties['lu_commerc'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_allotme"colspan="2"><strong>Land_Use_allotments</strong><br />' + (feature.properties['lu_allotme'] !== null ? autolinker.link(feature.properties['lu_allotme'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_scrub"colspan="2"><strong>Land_Use_scrub</strong><br />' + (feature.properties['lu_scrub'] !== null ? autolinker.link(feature.properties['lu_scrub'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="lu_militar"colspan="2"><strong>Land_Use_military</strong><br />' + (feature.properties['lu_militar'] !== null ? autolinker.link(feature.properties['lu_militar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="b_building"colspan="2"><strong>Buildings_building</strong><br />' + (feature.properties['b_building'] !== null ? autolinker.link(feature.properties['b_building'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_mall"colspan="2"><strong>Infrastructure_mall</strong><br />' + (feature.properties['if_mall'] !== null ? autolinker.link(feature.properties['if_mall'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_playgro"colspan="2"><strong>Infrastructure_playground</strong><br />' + (feature.properties['if_playgro'] !== null ? autolinker.link(feature.properties['if_playgro'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_kinderg"colspan="2"><strong>Infrastructure_kindergart</strong><br />' + (feature.properties['if_kinderg'] !== null ? autolinker.link(feature.properties['if_kinderg'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_school"colspan="2"><strong>Infrastructure_school</strong><br />' + (feature.properties['if_school'] !== null ? autolinker.link(feature.properties['if_school'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_superma"colspan="2"><strong>Infrastructure_supermarke</strong><br />' + (feature.properties['if_superma'] !== null ? autolinker.link(feature.properties['if_superma'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_pitch"colspan="2"><strong>Infrastructure_pitch</strong><br />' + (feature.properties['if_pitch'] !== null ? autolinker.link(feature.properties['if_pitch'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_sports_"colspan="2"><strong>Infrastructure_sports_cen</strong><br />' + (feature.properties['if_sports_'] !== null ? autolinker.link(feature.properties['if_sports_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_park"colspan="2"><strong>Infrastructure_park</strong><br />' + (feature.properties['if_park'] !== null ? autolinker.link(feature.properties['if_park'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_clinic"colspan="2"><strong>Infrastructure_clinic</strong><br />' + (feature.properties['if_clinic'] !== null ? autolinker.link(feature.properties['if_clinic'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_dog_par"colspan="2"><strong>Infrastructure_dog_park</strong><br />' + (feature.properties['if_dog_par'] !== null ? autolinker.link(feature.properties['if_dog_par'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_track"colspan="2"><strong>Infrastructure_track</strong><br />' + (feature.properties['if_track'] !== null ? autolinker.link(feature.properties['if_track'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_market_"colspan="2"><strong>Infrastructure_market_pla</strong><br />' + (feature.properties['if_market_'] !== null ? autolinker.link(feature.properties['if_market_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_hospita"colspan="2"><strong>Infrastructure_hospital</strong><br />' + (feature.properties['if_hospita'] !== null ? autolinker.link(feature.properties['if_hospita'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_fountai"colspan="2"><strong>Infrastructure_fountain</strong><br />' + (feature.properties['if_fountai'] !== null ? autolinker.link(feature.properties['if_fountai'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_garden_"colspan="2"><strong>Infrastructure_garden_cen</strong><br />' + (feature.properties['if_garden_'] !== null ? autolinker.link(feature.properties['if_garden_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_car_was"colspan="2"><strong>Infrastructure_car_wash</strong><br />' + (feature.properties['if_car_was'] !== null ? autolinker.link(feature.properties['if_car_was'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_comms_t"colspan="2"><strong>Infrastructure_comms_towe</strong><br />' + (feature.properties['if_comms_t'] !== null ? autolinker.link(feature.properties['if_comms_t'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_hotel"colspan="2"><strong>Infrastructure_hotel</strong><br />' + (feature.properties['if_hotel'] !== null ? autolinker.link(feature.properties['if_hotel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_restaur"colspan="2"><strong>Infrastructure_restaurant</strong><br />' + (feature.properties['if_restaur'] !== null ? autolinker.link(feature.properties['if_restaur'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_univers"colspan="2"><strong>Infrastructure_university</strong><br />' + (feature.properties['if_univers'] !== null ? autolinker.link(feature.properties['if_univers'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_college"colspan="2"><strong>Infrastructure_college</strong><br />' + (feature.properties['if_college'] !== null ? autolinker.link(feature.properties['if_college'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_newsage"colspan="2"><strong>Infrastructure_newsagent</strong><br />' + (feature.properties['if_newsage'] !== null ? autolinker.link(feature.properties['if_newsage'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_toilet"colspan="2"><strong>Infrastructure_toilet</strong><br />' + (feature.properties['if_toilet'] !== null ? autolinker.link(feature.properties['if_toilet'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_picnic_"colspan="2"><strong>Infrastructure_picnic_sit</strong><br />' + (feature.properties['if_picnic_'] !== null ? autolinker.link(feature.properties['if_picnic_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_clothes"colspan="2"><strong>Infrastructure_clothes</strong><br />' + (feature.properties['if_clothes'] !== null ? autolinker.link(feature.properties['if_clothes'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_shelter"colspan="2"><strong>Infrastructure_shelter</strong><br />' + (feature.properties['if_shelter'] !== null ? autolinker.link(feature.properties['if_shelter'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_communi"colspan="2"><strong>Infrastructure_community_</strong><br />' + (feature.properties['if_communi'] !== null ? autolinker.link(feature.properties['if_communi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_fast_fo"colspan="2"><strong>Infrastructure_fast_food</strong><br />' + (feature.properties['if_fast_fo'] !== null ? autolinker.link(feature.properties['if_fast_fo'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_prison"colspan="2"><strong>Infrastructure_prison</strong><br />' + (feature.properties['if_prison'] !== null ? autolinker.link(feature.properties['if_prison'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_conveni"colspan="2"><strong>Infrastructure_convenienc</strong><br />' + (feature.properties['if_conveni'] !== null ? autolinker.link(feature.properties['if_conveni'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_stadium"colspan="2"><strong>Infrastructure_stadium</strong><br />' + (feature.properties['if_stadium'] !== null ? autolinker.link(feature.properties['if_stadium'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_swimmin"colspan="2"><strong>Infrastructure_swimming_p</strong><br />' + (feature.properties['if_swimmin'] !== null ? autolinker.link(feature.properties['if_swimmin'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_police"colspan="2"><strong>Infrastructure_police</strong><br />' + (feature.properties['if_police'] !== null ? autolinker.link(feature.properties['if_police'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_fire_st"colspan="2"><strong>Infrastructure_fire_stati</strong><br />' + (feature.properties['if_fire_st'] !== null ? autolinker.link(feature.properties['if_fire_st'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="if_kiosk"colspan="2"><strong>Infrastructure_kiosk</strong><br />' + (feature.properties['if_kiosk'] !== null ? autolinker.link(feature.properties['if_kiosk'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Buffers_Metro_StationsZoneofourinterest_1_0() {
+            return {
+                pane: 'pane_Buffers_Metro_StationsZoneofourinterest_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(114,155,111,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Buffers_Metro_StationsZoneofourinterest_1');
+        map.getPane('pane_Buffers_Metro_StationsZoneofourinterest_1').style.zIndex = 401;
+        map.getPane('pane_Buffers_Metro_StationsZoneofourinterest_1').style['mix-blend-mode'] = 'normal';
+        var layer_Buffers_Metro_StationsZoneofourinterest_1 = new L.geoJson(json_Buffers_Metro_StationsZoneofourinterest_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Buffers_Metro_StationsZoneofourinterest_1',
+            layerName: 'layer_Buffers_Metro_StationsZoneofourinterest_1',
+            pane: 'pane_Buffers_Metro_StationsZoneofourinterest_1',
+            onEachFeature: pop_Buffers_Metro_StationsZoneofourinterest_1,
+            style: style_Buffers_Metro_StationsZoneofourinterest_1_0,
+        });
+        bounds_group.addLayer(layer_Buffers_Metro_StationsZoneofourinterest_1);
+        map.addLayer(layer_Buffers_Metro_StationsZoneofourinterest_1);
+        function pop_Land_Use_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="fclass"colspan="2"><strong>fclass</strong><br />' + (feature.properties['fclass'] !== null ? autolinker.link(feature.properties['fclass'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="name"colspan="2"><strong>name</strong><br />' + (feature.properties['name'] !== null ? autolinker.link(feature.properties['name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Land_Use_2_0(feature) {
+            switch(String(feature.properties['fclass'])) {
+                case 'commercial':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(79,113,255,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'retail':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,207,255,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'industrial':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(160,160,160,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'residential':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,251,184,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'recreation_ground':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(106,255,146,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'allotments':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,252,245,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'farmland':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,242,215,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'forest':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(201,234,194,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'grass':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(178,224,171,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'military':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(123,199,124,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'park':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(91,184,106,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'scrub':
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,102,41,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Land_Use_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,68,27,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Land_Use_2');
+        map.getPane('pane_Land_Use_2').style.zIndex = 402;
+        map.getPane('pane_Land_Use_2').style['mix-blend-mode'] = 'normal';
+        var layer_Land_Use_2 = new L.geoJson(json_Land_Use_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Land_Use_2',
+            layerName: 'layer_Land_Use_2',
+            pane: 'pane_Land_Use_2',
+            onEachFeature: pop_Land_Use_2,
+            style: style_Land_Use_2_0,
+        });
+        bounds_group.addLayer(layer_Land_Use_2);
+        map.addLayer(layer_Land_Use_2);
+        function pop_Infrastructure_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="fclass"colspan="2"><strong>fclass</strong><br />' + (feature.properties['fclass'] !== null ? autolinker.link(feature.properties['fclass'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="name"colspan="2"><strong>name</strong><br />' + (feature.properties['name'] !== null ? autolinker.link(feature.properties['name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Infrastructure_3_0(feature) {
+            switch(String(feature.properties['fclass'])) {
+                case 'car_wash':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(38,229,79,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'clinic':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(132,231,52,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'clothes':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(29,15,216,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'college':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(214,117,127,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'comms_tower':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(29,220,102,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'community_centre':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(194,62,209,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'convenience':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,108,214,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'dog_park':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(57,230,34,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'fast_food':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(166,105,212,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'fire_station':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(239,52,195,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'fountain':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,88,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'garden_centre':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(181,83,216,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'hospital':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,177,203,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'hotel':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(110,217,169,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'kindergarten':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(103,220,57,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'kiosk':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,94,141,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'mall':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,104,81,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'market_place':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(114,166,233,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'newsagent':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(226,90,217,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'park':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(100,234,196,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'picnic_site':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(123,132,209,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'pitch':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,30,200,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'playground':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(137,93,204,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'police':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,152,130,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'prison':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(158,223,52,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'restaurant':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,60,50,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'school':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(229,156,66,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'shelter':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,187,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'sports_centre':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,212,102,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'stadium':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,181,217,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'supermarket':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,171,134,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'swimming_pool':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,65,102,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'toilet':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(14,229,204,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'track':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,209,129,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'university':
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(185,216,74,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Infrastructure_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(78,218,225,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Infrastructure_3');
+        map.getPane('pane_Infrastructure_3').style.zIndex = 403;
+        map.getPane('pane_Infrastructure_3').style['mix-blend-mode'] = 'normal';
+        var layer_Infrastructure_3 = new L.geoJson(json_Infrastructure_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Infrastructure_3',
+            layerName: 'layer_Infrastructure_3',
+            pane: 'pane_Infrastructure_3',
+            onEachFeature: pop_Infrastructure_3,
+            style: style_Infrastructure_3_0,
+        });
+        bounds_group.addLayer(layer_Infrastructure_3);
+        map.addLayer(layer_Infrastructure_3);
+        function pop_Buildings_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="fclass"colspan="2"><strong>fclass</strong><br />' + (feature.properties['fclass'] !== null ? autolinker.link(feature.properties['fclass'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="name"colspan="2"><strong>name</strong><br />' + (feature.properties['name'] !== null ? autolinker.link(feature.properties['name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="type"colspan="2"><strong>type</strong><br />' + (feature.properties['type'] !== null ? autolinker.link(feature.properties['type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Buildings_4_0(feature) {
+            switch(String(feature.properties['type'])) {
+                case 'apartments':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,122,196,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'church':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,111,226,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'civic':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(113,111,233,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'clinic':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(18,203,21,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'college':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(96,203,180,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'commercial':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(64,127,210,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'construction':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(93,28,223,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'detached':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(22,235,90,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'dormitory':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(159,56,218,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'fire_station':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(203,28,159,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'garage':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(169,45,203,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'garages':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,230,22,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'grandstand':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(193,219,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'guardhouse':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,215,228,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'hospital':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(167,125,211,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'hotel':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,180,47,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'house':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,121,160,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'houseboat':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(127,229,84,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'industrial':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,192,22,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'kindergarten':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,155,124,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'kiosk':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,130,144,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'office':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,140,59,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'parking':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(83,101,215,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'prison':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(100,71,225,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'public':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(61,205,85,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'residential':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(52,204,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'retail':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,70,109,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'school':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(99,203,196,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'shed':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(74,166,231,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'shelter':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,45,42,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'shop':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(216,71,42,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'sports_centre':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(236,37,156,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'sports_hall':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(130,226,52,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'store':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(100,238,79,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'train_station':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,209,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'transportation':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(240,185,91,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'university':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(188,224,134,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'warehouse':
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(101,133,215,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Buildings_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(45,164,200,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Buildings_4');
+        map.getPane('pane_Buildings_4').style.zIndex = 404;
+        map.getPane('pane_Buildings_4').style['mix-blend-mode'] = 'normal';
+        var layer_Buildings_4 = new L.geoJson(json_Buildings_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Buildings_4',
+            layerName: 'layer_Buildings_4',
+            pane: 'pane_Buildings_4',
+            onEachFeature: pop_Buildings_4,
+            style: style_Buildings_4_0,
+        });
+        bounds_group.addLayer(layer_Buildings_4);
+        map.addLayer(layer_Buildings_4);
+        function pop_Public_Transport_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="fclass"colspan="2"><strong>fclass</strong><br />' + (feature.properties['fclass'] !== null ? autolinker.link(feature.properties['fclass'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="name"colspan="2"><strong>name</strong><br />' + (feature.properties['name'] !== null ? autolinker.link(feature.properties['name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Public_Transport_5_0() {
+            return {
+                pane: 'pane_Public_Transport_5',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(72,123,182,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Public_Transport_5');
+        map.getPane('pane_Public_Transport_5').style.zIndex = 405;
+        map.getPane('pane_Public_Transport_5').style['mix-blend-mode'] = 'normal';
+        var layer_Public_Transport_5 = new L.geoJson(json_Public_Transport_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Public_Transport_5',
+            layerName: 'layer_Public_Transport_5',
+            pane: 'pane_Public_Transport_5',
+            onEachFeature: pop_Public_Transport_5,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Public_Transport_5_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Public_Transport_5);
+        map.addLayer(layer_Public_Transport_5);
+        function pop_Future_metro_stations_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td class="visible-with-data" id="Name"colspan="2"><strong>Name</strong><br />' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Future_metro_stations_6_0() {
+            return {
+                pane: 'pane_Future_metro_stations_6',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(128,17,25,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,30,42,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Future_metro_stations_6');
+        map.getPane('pane_Future_metro_stations_6').style.zIndex = 406;
+        map.getPane('pane_Future_metro_stations_6').style['mix-blend-mode'] = 'normal';
+        var layer_Future_metro_stations_6 = new L.geoJson(json_Future_metro_stations_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Future_metro_stations_6',
+            layerName: 'layer_Future_metro_stations_6',
+            pane: 'pane_Future_metro_stations_6',
+            onEachFeature: pop_Future_metro_stations_6,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Future_metro_stations_6_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Future_metro_stations_6);
+        map.addLayer(layer_Future_metro_stations_6);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var overlaysTree = [
+            {label: '<img src="legend/Future_metro_stations_6.png" /> Future_metro_stations', layer: layer_Future_metro_stations_6},
+            {label: '<img src="legend/Public_Transport_5.png" /> Public_Transport', layer: layer_Public_Transport_5},
+            {label: 'Buildings<br /><table><tr><td style="text-align: center;"><img src="legend/Buildings_4_Жилыедома0.png" /></td><td>Жилые дома</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Церковь1.png" /></td><td>Церковь</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Общественныездания2.png" /></td><td>Общественные здания</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Клиники3.png" /></td><td>Клиники</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Колледжи4.png" /></td><td>Колледжи</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Коммерческиездания5.png" /></td><td>Коммерческие здания</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Строительныеплощадки6.png" /></td><td>Строительные площадки</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Частныедома7.png" /></td><td>Частные дома</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Общежития8.png" /></td><td>Общежития</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Пожарныестанции9.png" /></td><td>Пожарные станции</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Гаражи10.png" /></td><td>Гаражи</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Гаражи11.png" /></td><td>Гаражи</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Трибуны12.png" /></td><td>Трибуны</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Будкиохраны13.png" /></td><td>Будки охраны</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Больницы14.png" /></td><td>Больницы</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Отели15.png" /></td><td>Отели</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Дома16.png" /></td><td>Дома</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Плавучийдом17.png" /></td><td>Плавучий дом</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Промышленныездания18.png" /></td><td>Промышленные здания</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Детскиесады19.png" /></td><td>Детские сады</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Киоски20.png" /></td><td>Киоски</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Оффисныездания21.png" /></td><td>Оффисные здания</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Парковочныеместа22.png" /></td><td>Парковочные места</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Тюрьмы23.png" /></td><td>Тюрьмы</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Общественныездания24.png" /></td><td>Общественные здания</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Жилыедома25.png" /></td><td>Жилые дома</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Розничнаяторговля26.png" /></td><td>Розничная торговля</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Школы27.png" /></td><td>Школы</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Ветхиездания28.png" /></td><td>Ветхие здания</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Убежища29.png" /></td><td>Убежища</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Магазины30.png" /></td><td>Магазины</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Спортивныецентры31.png" /></td><td>Спортивные центры</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Спортивныезалы32.png" /></td><td>Спортивные залы</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Магазины33.png" /></td><td>Магазины</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_ЖДстанции34.png" /></td><td>Ж/Д станции</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Общественныйтранспорт35.png" /></td><td>Общественный транспорт</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Университеты36.png" /></td><td>Университеты</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_Склады37.png" /></td><td>Склады</td></tr><tr><td style="text-align: center;"><img src="legend/Buildings_4_38.png" /></td><td></td></tr></table>', layer: layer_Buildings_4},
+            {label: 'Infrastructure<br /><table><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Автомойки0.png" /></td><td>Автомойки</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Клиники1.png" /></td><td>Клиники</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Магазиныодежды2.png" /></td><td>Магазины одежды</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Колледжи3.png" /></td><td>Колледжи</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Коммуникационныевышки4.png" /></td><td>Коммуникационные вышки</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Общественныецентры5.png" /></td><td>Общественные центры</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Продуктовыемагазины6.png" /></td><td>Продуктовые магазины</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Зоныдлявыгуласобак7.png" /></td><td>Зоны для выгула собак</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Фастфуд8.png" /></td><td>Фастфуд</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Пожарныестанции9.png" /></td><td>Пожарные станции</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Фонтан10.png" /></td><td>Фонтан</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Садовыетовары11.png" /></td><td>Садовые товары</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Больницы12.png" /></td><td>Больницы</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Отели13.png" /></td><td>Отели</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Садики14.png" /></td><td>Садики</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Киоски15.png" /></td><td>Киоски</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Торговыецентры16.png" /></td><td>Торговые центры</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Рынки17.png" /></td><td>Рынки</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Газетныекиоски18.png" /></td><td>Газетные киоски</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Парки19.png" /></td><td>Парки</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Местадляпикника20.png" /></td><td>Места для пикника</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Спортивныеполякорты21.png" /></td><td>Спортивные поля/корты</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Детскиеплощадки22.png" /></td><td>Детские площадки</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Полиция23.png" /></td><td>Полиция</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Тюрьмы24.png" /></td><td>Тюрьмы</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Рестораны25.png" /></td><td>Рестораны</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Школы26.png" /></td><td>Школы</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Убежища27.png" /></td><td>Убежища</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Спортивныецентры28.png" /></td><td>Спортивные центры</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Стадионы29.png" /></td><td>Стадионы</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Супермаркеты30.png" /></td><td>Супермаркеты</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Бассейны31.png" /></td><td>Бассейны</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Общественныетуалеты32.png" /></td><td>Общественные туалеты</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Беговыедорожки33.png" /></td><td>Беговые дорожки</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_Университеты34.png" /></td><td>Университеты</td></tr><tr><td style="text-align: center;"><img src="legend/Infrastructure_3_35.png" /></td><td></td></tr></table>', layer: layer_Infrastructure_3},
+            {label: 'Land_Use<br /><table><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Коммерческиезоны0.png" /></td><td>Коммерческие зоны</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Зонырозничнойторговли1.png" /></td><td>Зоны розничной торговли</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Промышленныезоны2.png" /></td><td>Промышленные зоны</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Жилыезоны3.png" /></td><td>Жилые зоны</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Зонырекреации4.png" /></td><td>Зоны рекреации</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_СНТ5.png" /></td><td>СНТ</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Фермы6.png" /></td><td>Фермы</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Лес7.png" /></td><td>Лес</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Трава8.png" /></td><td>Трава</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Военный9.png" /></td><td>Военный</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Парк10.png" /></td><td>Парк</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_Поросль11.png" /></td><td>Поросль</td></tr><tr><td style="text-align: center;"><img src="legend/Land_Use_2_12.png" /></td><td></td></tr></table>', layer: layer_Land_Use_2},
+            {label: '<img src="legend/Buffers_Metro_StationsZoneofourinterest_1.png" /> Buffers_Metro_Stations (Zone of our interest)', layer: layer_Buffers_Metro_StationsZoneofourinterest_1},
+            {label: "Positron [no labels]", layer: layer_Positronnolabels_0, radioGroup: 'bm' },]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: false, 
+        });
+        lay.addTo(map);
+		document.addEventListener("DOMContentLoaded", function() {
+            // set new Layers List height which considers toggle icon
+            function newLayersListHeight() {
+                var layerScrollbarElement = document.querySelector('.leaflet-control-layers-scrollbar');
+                if (layerScrollbarElement) {
+                    var layersListElement = document.querySelector('.leaflet-control-layers-list');
+                    var originalHeight = layersListElement.style.height 
+                        || window.getComputedStyle(layersListElement).height;
+                    var newHeight = parseFloat(originalHeight) - 50;
+                    layersListElement.style.height = newHeight + 'px';
+                }
+            }
+            var isLayersListExpanded = true;
+            var controlLayersElement = document.querySelector('.leaflet-control-layers');
+            var toggleLayerControl = document.querySelector('.leaflet-control-layers-toggle');
+            // toggle Collapsed/Expanded and apply new Layers List height
+            toggleLayerControl.addEventListener('click', function() {
+                if (isLayersListExpanded) {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                } else {
+                    controlLayersElement.classList.add('leaflet-control-layers-expanded');
+                }
+                isLayersListExpanded = !isLayersListExpanded;
+                newLayersListHeight()
+            });	
+			// apply new Layers List height if toggle layerstree
+			if (controlLayersElement) {
+				controlLayersElement.addEventListener('click', function(event) {
+					var toggleLayerHeaderPointer = event.target.closest('.leaflet-layerstree-header-pointer span');
+					if (toggleLayerHeaderPointer) {
+						newLayersListHeight();
+					}
+				});
+			}
+            // Collapsed/Expanded at Start to apply new height
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            // Collapsed touch/small screen
+            var isSmallScreen = window.innerWidth < 650;
+            if (isSmallScreen) {
+                setTimeout(function() {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                    isLayersListExpanded = !isLayersListExpanded;
+                }, 500);
+            }  
+        });       
+        setBounds();
+        </script>
+    </body>
+</html>
